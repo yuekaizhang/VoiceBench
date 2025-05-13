@@ -4,27 +4,28 @@ import json
 from openai import OpenAI
 from src.api import generate_text_chat
 from argparse import ArgumentParser
+import os
 
 
-client = OpenAI()
+client = OpenAI(base_url="https://aihubmix.com/v1",api_key="sk-")
 
 meta_prompt_open = """
 I need your help to evaluate the performance of several models in the speech interaction scenario. The models will receive a speech input from the user, which they need to understand and respond to with a speech output.
-Your task is to rate the model’s responses based on the provided user input transcription [Instruction] and the model’s output transcription [Response].
+Your task is to rate the model's responses based on the provided user input transcription [Instruction] and the model's output transcription [Response].
 
 Please evaluate the response on a scale of 1 to 5:
-1 point: The response is largely irrelevant, incorrect, or fails to address the user’s query. It may be off-topic or provide incorrect information.
-2 points: The response is somewhat relevant but lacks accuracy or completeness. It may only partially answer the user’s question or include extraneous information.
-3 points: The response is relevant and mostly accurate, but it may lack conciseness or include unnecessary details that don’t contribute to the main point.
-4 points: The response is relevant, accurate, and concise, providing a clear answer to the user’s question without unnecessary elaboration.
-5 points: The response is exceptionally relevant, accurate, and to the point. It directly addresses the user’s query in a highly effective and efficient manner, providing exactly the information needed.
+1 point: The response is largely irrelevant, incorrect, or fails to address the user's query. It may be off-topic or provide incorrect information.
+2 points: The response is somewhat relevant but lacks accuracy or completeness. It may only partially answer the user's question or include extraneous information.
+3 points: The response is relevant and mostly accurate, but it may lack conciseness or include unnecessary details that don't contribute to the main point.
+4 points: The response is relevant, accurate, and concise, providing a clear answer to the user's question without unnecessary elaboration.
+5 points: The response is exceptionally relevant, accurate, and to the point. It directly addresses the user's query in a highly effective and efficient manner, providing exactly the information needed.
 
-Below are the transcription of user’s instruction and models’ response:
+Below are the transcription of user's instruction and models' response:
 ### [Instruction]: {prompt}
 ### [Response]: {response}
 
 After evaluating, please output the score only without anything else.
-You don’t need to provide any explanations.
+You don't need to provide any explanations.
 """
 
 meta_prompt_qa = """
@@ -50,7 +51,7 @@ def generate(item):
     rtn = [
         item.message.content.strip() for item in generate_text_chat(
             client=client,
-            model='gpt-4o-mini',
+            model='gpt-4o-mini-2024-07-18',
             messages=[{"role": "system",
                        "content": "You are a helpful assistant who tries to help answer the user's question."},
                       {"role": "user", "content": prompt}],
@@ -82,8 +83,12 @@ def main():
         scores = list(tqdm(pool.imap(generate, data), total=len(data)))
 
     # save results
-    tgt_file = 'result-' + args.src_file
-    with open(tgt_file, "w") as file:
+    src_dir = os.path.dirname(args.src_file)
+    src_basename = os.path.basename(args.src_file)
+    tgt_file_name = f"result-{src_basename}"
+    tgt_file_path = os.path.join(src_dir, tgt_file_name) if src_dir else tgt_file_name
+
+    with open(tgt_file_path, "w") as file:
         for d in scores:
             file.write(json.dumps(d) + "\n")
 

@@ -30,7 +30,8 @@ class Naive4Assistant(VoiceAssistant):
         return pipe
 
     def load_llm(self):
-        model_id = "meta-llama/Llama-3.2-3B-Instruct"
+        # model_id = "meta-llama/Llama-3.2-3B-Instruct"
+        model_id = "Qwen/Qwen2.5-0.5B-Instruct"
 
         pipeline = transformers.pipeline(
             "text-generation",
