@@ -1,10 +1,10 @@
-from datasets import load_dataset, Audio
+
+from datasets import load_dataset, Audio, concatenate_datasets
 from argparse import ArgumentParser
 from src.models import model_cls_mapping
 import json
 from tqdm import tqdm
 from loguru import logger
-
 
 def main():
     parser = ArgumentParser()
@@ -15,7 +15,11 @@ def main():
     args = parser.parse_args()
 
     # load data
-    data = load_dataset('hlt-lab/voicebench', args.data, split=args.split)
+    if args.data == 'mmsu':
+        data = load_dataset('hlt-lab/voicebench', args.data)
+        data = concatenate_datasets([data[split] for split in data.keys()])
+    else:
+        data = load_dataset('hlt-lab/voicebench', args.data, split=args.split)
     data = data.cast_column("audio", Audio(sampling_rate=16_000))
 
     # load model
